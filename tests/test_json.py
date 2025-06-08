@@ -4,7 +4,7 @@ from typing import List, Optional, cast
 import pytest
 from pydantic import BaseModel
 
-from sdgen import DataStructureModel
+from sdgen import DataStructureModel, i8, i16, i32, u8, u16, u32
 
 
 class Address(BaseModel):
@@ -18,6 +18,24 @@ class Person(BaseModel):
     age: Optional[int] = None
     hobbies: Optional[List[str]] = None
     address_history: Optional[List[Address]] = None
+
+
+class IntModel(BaseModel):
+    i8_field: i8
+    u8_field: u8
+    i16_field: i16
+    u16_field: u16
+    i32_field: i32
+    u32_field: u32
+
+
+class IntListModel(BaseModel):
+    i8_list: List[i8]
+    u8_list: List[u8]
+    i16_list: List[i16]
+    u16_list: List[u16]
+    i32_list: List[i32]
+    u32_list: List[u32]
 
 
 def test_parse_json():
@@ -115,3 +133,78 @@ def test_to_json_and_roundtrip():
     assert parsed.address_history is not None
     assert parsed.address_history[0].city == "X"
     assert parsed.address_history[0].apartment == "1A"
+
+
+def test_datastructuremodelclass_custom_int_types_json():
+    data = {
+        "i8_field": -128,
+        "u8_field": 255,
+        "i16_field": -32768,
+        "u16_field": 65535,
+        "i32_field": -2147483648,
+        "u32_field": 4294967295,
+    }
+    model = cast(
+        IntModel, DataStructureModel(IntModel).from_json(json.dumps(data))
+    )
+    assert isinstance(model.i8_field, i8)
+    assert model.i8_field == -128
+    assert isinstance(model.u8_field, u8)
+    assert model.u8_field == 255
+    assert isinstance(model.i16_field, i16)
+    assert model.i16_field == -32768
+    assert isinstance(model.u16_field, u16)
+    assert model.u16_field == 65535
+    assert isinstance(model.i32_field, i32)
+    assert model.i32_field == -2147483648
+    assert isinstance(model.u32_field, u32)
+    assert model.u32_field == 4294967295
+    # Test validation errors
+    bad_data = {
+        "i8_field": -129,
+        "u8_field": 256,
+        "i16_field": -32769,
+        "u16_field": 65536,
+        "i32_field": -2147483649,
+        "u32_field": 4294967296,
+    }
+    with pytest.raises(Exception):
+        DataStructureModel(IntModel).from_json(json.dumps(bad_data))
+
+
+def test_datastructuremodelclass_custom_int_list_types_json():
+    json_data = {
+        "i8_list": [-128, 0, 127],
+        "u8_list": [0, 128, 255],
+        "i16_list": [-32768, 0, 32767],
+        "u16_list": [0, 32768, 65535],
+        "i32_list": [-2147483648, 0, 2147483647],
+        "u32_list": [0, 2147483648, 4294967295],
+    }
+    model = cast(
+        IntListModel,
+        DataStructureModel(IntListModel).from_json(json.dumps(json_data)),
+    )
+    assert model.i8_list == [-128, 0, 127]
+    assert all(isinstance(x, i8) for x in model.i8_list)
+    assert model.u8_list == [0, 128, 255]
+    assert all(isinstance(x, u8) for x in model.u8_list)
+    assert model.i16_list == [-32768, 0, 32767]
+    assert all(isinstance(x, i16) for x in model.i16_list)
+    assert model.u16_list == [0, 32768, 65535]
+    assert all(isinstance(x, u16) for x in model.u16_list)
+    assert model.i32_list == [-2147483648, 0, 2147483647]
+    assert all(isinstance(x, i32) for x in model.i32_list)
+    assert model.u32_list == [0, 2147483648, 4294967295]
+    assert all(isinstance(x, u32) for x in model.u32_list)
+    # Test validation errors
+    bad_json = {
+        "i8_list": [-129],
+        "u8_list": [256],
+        "i16_list": [-32769],
+        "u16_list": [65536],
+        "i32_list": [-2147483649],
+        "u32_list": [4294967296],
+    }
+    with pytest.raises(Exception):
+        DataStructureModel(IntListModel).from_json(json.dumps(bad_json))

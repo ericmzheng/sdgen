@@ -7,12 +7,27 @@ from typing import Any, Dict, List, Type, Union, get_args, get_origin
 from xml.etree.ElementTree import Element, fromstring, parse, tostring
 
 import yaml
-from pydantic import BaseModel, ConfigDict, create_model
+from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler, create_model
+from pydantic_core import core_schema
 
 __all__ = ["DataStructureModel"]
 
 
-class i8(int):
+class _sdgenint(int):
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type, handler: GetCoreSchemaHandler
+    ):
+        # Accept int or this type, coerce to this type, and validate range
+        def validate(value):
+            v = int(value)
+            # Range check is done in __new__
+            return cls(v)
+
+        return core_schema.no_info_plain_validator_function(validate)
+
+
+class i8(_sdgenint):
     def __new__(cls, value):
         value = int(value)
         if not -128 <= value <= 127:
@@ -20,7 +35,7 @@ class i8(int):
         return int.__new__(cls, value)
 
 
-class u8(int):
+class u8(_sdgenint):
     def __new__(cls, value):
         value = int(value)
         if not 0 <= value <= 255:
@@ -28,7 +43,7 @@ class u8(int):
         return int.__new__(cls, value)
 
 
-class i16(int):
+class i16(_sdgenint):
     def __new__(cls, value):
         value = int(value)
         if not -32768 <= value <= 32767:
@@ -36,7 +51,7 @@ class i16(int):
         return int.__new__(cls, value)
 
 
-class u16(int):
+class u16(_sdgenint):
     def __new__(cls, value):
         value = int(value)
         if not 0 <= value <= 65535:
@@ -44,7 +59,7 @@ class u16(int):
         return int.__new__(cls, value)
 
 
-class i32(int):
+class i32(_sdgenint):
     def __new__(cls, value):
         value = int(value)
         if not -2147483648 <= value <= 2147483647:
@@ -52,7 +67,7 @@ class i32(int):
         return int.__new__(cls, value)
 
 
-class u32(int):
+class u32(_sdgenint):
     def __new__(cls, value):
         value = int(value)
         if not 0 <= value <= 4294967295:
