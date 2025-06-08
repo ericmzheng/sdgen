@@ -1,0 +1,16 @@
+[project]
+name = "sdgen"
+version = "0.1.0"
+description = "A library for structured data generation, parsing, and serialization."
+authors = [{ name = "Eric Zheng", email = "ericmzheng@ucla.edu" }]
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 80
+target-version = "py310"
+src = ["src"]
+exclude = [".venv", "build", "dist", "__pycache__"]
+lint.extend-select = ["I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
