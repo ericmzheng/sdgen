@@ -32,7 +32,7 @@ def test_parse_yaml():
         zip_code: "98101"
         apartment: 5C
     """
-    charlie = cast(Person, DataStructureModel(Person).parse_yaml(yaml_data))
+    charlie = cast(Person, DataStructureModel(Person).from_yaml(yaml_data))
     assert charlie.name == "Charlie"
     assert charlie.age is None
     assert charlie.hobbies == ["Chess", "Cooking"]
@@ -50,7 +50,7 @@ def test_parse_yaml_minimal():
     yaml_data = """
     name: Alice
     """
-    alice = cast(Person, DataStructureModel(Person).parse_yaml(yaml_data))
+    alice = cast(Person, DataStructureModel(Person).from_yaml(yaml_data))
     assert alice.name == "Alice"
     assert alice.age is None
     assert alice.hobbies is None
@@ -62,7 +62,7 @@ def test_parse_yaml_with_age_and_no_hobbies():
     name: Bob
     age: 42
     """
-    bob = cast(Person, DataStructureModel(Person).parse_yaml(yaml_data))
+    bob = cast(Person, DataStructureModel(Person).from_yaml(yaml_data))
     assert bob.name == "Bob"
     assert bob.age == 42
     assert bob.hobbies is None
@@ -75,7 +75,7 @@ def test_parse_yaml_empty_hobbies_and_address_history():
     hobbies: []
     address_history: []
     """
-    dana = cast(Person, DataStructureModel(Person).parse_yaml(yaml_data))
+    dana = cast(Person, DataStructureModel(Person).from_yaml(yaml_data))
     assert dana.name == "Dana"
     assert dana.hobbies == []
     assert dana.address_history == []
@@ -88,7 +88,7 @@ def test_parse_yaml_address_with_apartment_missing():
       - city: Boston
         zip_code: "02101"
     """
-    ed = cast(Person, DataStructureModel(Person).parse_yaml(yaml_data))
+    ed = cast(Person, DataStructureModel(Person).from_yaml(yaml_data))
     assert ed.name == "Ed"
     assert ed.address_history is not None
     assert len(ed.address_history) == 1
@@ -100,7 +100,7 @@ def test_parse_yaml_address_with_apartment_missing():
 def test_parse_yaml_invalid_yaml_raises():
     yaml_data = "name: [unclosed"
     with pytest.raises(Exception):
-        DataStructureModel(Person).parse_yaml(yaml_data)
+        DataStructureModel(Person).from_yaml(yaml_data)
 
 
 def test_parse_yaml_invalid_age_type_raises():
@@ -109,10 +109,10 @@ def test_parse_yaml_invalid_age_type_raises():
     age: notanumber
     """
     with pytest.raises(Exception):
-        DataStructureModel(Person).parse_yaml(yaml_data)
+        DataStructureModel(Person).from_yaml(yaml_data)
 
 
-def test_to_yaml_and_to_native_tree_roundtrip():
+def test_to_yaml_and_roundtrip():
     data = {
         "name": "RoundTrip",
         "age": 25,
@@ -121,9 +121,9 @@ def test_to_yaml_and_to_native_tree_roundtrip():
             {"city": "X", "zip_code": "12345", "apartment": "1A"}
         ],
     }
-    model = DataStructureModel(Person).parse_native_tree(data)
+    model = DataStructureModel(Person).from_native_tree(data)
     yaml_str = model.to_yaml()
-    parsed = cast(Person, DataStructureModel(Person).parse_yaml(yaml_str))
+    parsed = cast(Person, DataStructureModel(Person).from_yaml(yaml_str))
     assert parsed.name == "RoundTrip"
     assert parsed.age == 25
     assert parsed.hobbies == ["A", "B"]

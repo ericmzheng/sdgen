@@ -19,7 +19,7 @@ class Person(BaseModel):
     address_history: Optional[List[Address]] = None
 
 
-def test_parse():
+def test_parse_xml():
     xml = """
     <Person>
       <name>Charlie</name>
@@ -40,14 +40,10 @@ def test_parse():
       </address_history>
     </Person>
     """
-
-    charlie = cast(Person, DataStructureModel(Person).parse_xml(xml))
+    charlie = cast(Person, DataStructureModel(Person).from_xml(xml))
     assert charlie.name == "Charlie"
     assert charlie.age is None
-    assert charlie.hobbies is not None
-    assert len(charlie.hobbies) == 2
-    assert charlie.hobbies[0] == "Chess"
-    assert charlie.hobbies[1] == "Cooking"
+    assert charlie.hobbies == ["Chess", "Cooking"]
     assert charlie.address_history is not None
     assert len(charlie.address_history) == 2
     assert charlie.address_history[0].city == "Denver"
@@ -64,7 +60,7 @@ def test_parse_minimal():
         <name>Alice</name>
     </Person>
     """
-    alice = cast(Person, DataStructureModel(Person).parse_xml(xml))
+    alice = cast(Person, DataStructureModel(Person).from_xml(xml))
     assert alice.name == "Alice"
     assert alice.age is None
     assert alice.hobbies is None
@@ -78,7 +74,7 @@ def test_parse_with_age_and_no_hobbies():
         <age>42</age>
     </Person>
     """
-    bob = cast(Person, DataStructureModel(Person).parse_xml(xml))
+    bob = cast(Person, DataStructureModel(Person).from_xml(xml))
     assert bob.name == "Bob"
     assert bob.age == 42
     assert bob.hobbies is None
@@ -93,7 +89,7 @@ def test_parse_empty_hobbies_and_address_history():
         <address_history></address_history>
     </Person>
     """
-    dana = cast(Person, DataStructureModel(Person).parse_xml(xml))
+    dana = cast(Person, DataStructureModel(Person).from_xml(xml))
     assert dana.name == "Dana"
     assert dana.hobbies == []
     assert dana.address_history == []
@@ -111,7 +107,7 @@ def test_parse_address_with_apartment_missing():
         </address_history>
     </Person>
     """
-    ed = cast(Person, DataStructureModel(Person).parse_xml(xml))
+    ed = cast(Person, DataStructureModel(Person).from_xml(xml))
     assert ed.name == "Ed"
     assert ed.address_history is not None
     assert len(ed.address_history) == 1
@@ -123,7 +119,7 @@ def test_parse_address_with_apartment_missing():
 def test_parse_invalid_xml_raises():
     xml = "<Person><name>Missing end tag"
     with pytest.raises(Exception):
-        DataStructureModel(Person).parse_xml(xml)
+        DataStructureModel(Person).from_xml(xml)
 
 
 def test_parse_invalid_age_type_raises():
@@ -134,10 +130,10 @@ def test_parse_invalid_age_type_raises():
     </Person>
     """
     with pytest.raises(Exception):
-        DataStructureModel(Person).parse_xml(xml)
+        DataStructureModel(Person).from_xml(xml)
 
 
-def test_to_xml_and_to_xml_tree_roundtrip():
+def test_to_xml_and_roundtrip():
     data = {
         "name": "RoundTrip",
         "age": 25,
@@ -146,10 +142,9 @@ def test_to_xml_and_to_xml_tree_roundtrip():
             {"city": "X", "zip_code": "12345", "apartment": "1A"}
         ],
     }
-    model = DataStructureModel(Person).parse_native_tree(data)
+    model = DataStructureModel(Person).from_native_tree(data)
     xml_str = model.to_xml()
-    print(xml_str)
-    parsed = cast(Person, DataStructureModel(Person).parse_xml(xml_str))
+    parsed = cast(Person, DataStructureModel(Person).from_xml(xml_str))
     assert parsed.name == "RoundTrip"
     assert parsed.age == 25
     assert parsed.hobbies == ["A", "B"]
