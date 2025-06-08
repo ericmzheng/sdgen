@@ -9,7 +9,7 @@ from xml.etree.ElementTree import Element, fromstring, parse, tostring
 import yaml  # Add this import at the top
 from pydantic import BaseModel, ConfigDict, create_model
 
-__all__ = ["StructuredDataModel"]
+__all__ = ["DataStructureModel"]
 
 
 def is_list_type(annotation: Type) -> bool:
@@ -40,16 +40,16 @@ def unwrap_optional(annotation: Type) -> Type:
     return annotation
 
 
-class StructuredDataModelClass(BaseModel):
+class DataStructureModelClass(BaseModel):
     """
-    A base class for structured data models.
-    This class can be extended to create specific structured data models.
+    A base class for data structure models.
+    This class can be extended to create specific data structure models.
     """
 
     @classmethod
     def _model(cls) -> Type[BaseModel]:
         """
-        Returns the Pydantic model class associated with this structured data model.
+        Returns the Pydantic model class associated with this data structure model.
         This method must be implemented by subclasses to return the specific Pydantic model class.
         """
         raise NotImplementedError(
@@ -57,7 +57,7 @@ class StructuredDataModelClass(BaseModel):
         )
 
     @classmethod
-    def parse_xml_file(cls, path: os.PathLike) -> StructuredDataModelClass:
+    def parse_xml_file(cls, path: os.PathLike) -> DataStructureModelClass:
         """
         Parses an XML file and returns an instance of the model.
         """
@@ -65,14 +65,14 @@ class StructuredDataModelClass(BaseModel):
             return cls.parse_xml_tree(parse(f).getroot())
 
     @classmethod
-    def parse_xml(cls, xml_data: str) -> StructuredDataModelClass:
+    def parse_xml(cls, xml_data: str) -> DataStructureModelClass:
         """
         Parses an XML string and returns an instance of the model.
         """
         return cls.parse_xml_tree(fromstring(xml_data))
 
     @classmethod
-    def parse_xml_tree(cls, element: Element) -> StructuredDataModelClass:
+    def parse_xml_tree(cls, element: Element) -> DataStructureModelClass:
         """
         Parses an XML tree and returns an instance of the model.
         """
@@ -109,7 +109,7 @@ class StructuredDataModelClass(BaseModel):
                             item_type, BaseModel
                         ):
                             values[name].append(
-                                StructuredDataModel(item_type).parse_xml_tree(
+                                DataStructureModel(item_type).parse_xml_tree(
                                     item_element
                                 )
                             )
@@ -124,7 +124,7 @@ class StructuredDataModelClass(BaseModel):
             ):
                 sub_element = element.find(name)
                 if sub_element is not None:
-                    values[name] = StructuredDataModel(
+                    values[name] = DataStructureModel(
                         actual_type
                     ).parse_xml_tree(sub_element)
 
@@ -137,7 +137,7 @@ class StructuredDataModelClass(BaseModel):
         return cls(**values)
 
     @classmethod
-    def parse_json_file(cls, path: os.PathLike) -> StructuredDataModelClass:
+    def parse_json_file(cls, path: os.PathLike) -> DataStructureModelClass:
         """
         Parses a JSON file and returns an instance of the model.
         """
@@ -145,23 +145,21 @@ class StructuredDataModelClass(BaseModel):
             return cls.parse_native_tree(json.load(f))
 
     @classmethod
-    def parse_json(cls, json_data: str) -> StructuredDataModelClass:
+    def parse_json(cls, json_data: str) -> DataStructureModelClass:
         """
         Parses a JSON string and returns an instance of the model.
         """
         return cls.parse_native_tree(json.loads(json_data))
 
     @classmethod
-    def parse_native_tree(
-        cls, data: Dict[str, Any]
-    ) -> StructuredDataModelClass:
+    def parse_native_tree(cls, data: Dict[str, Any]) -> DataStructureModelClass:
         """
         Parses a Dict tree and returns an instance of the model.
         """
         return cls.model_validate(data)
 
     @classmethod
-    def parse_yaml_file(cls, path: os.PathLike) -> StructuredDataModelClass:
+    def parse_yaml_file(cls, path: os.PathLike) -> DataStructureModelClass:
         """
         Parses a YAML file and returns an instance of the model.
         """
@@ -169,7 +167,7 @@ class StructuredDataModelClass(BaseModel):
             return cls.parse_native_tree(yaml.safe_load(f))
 
     @classmethod
-    def parse_yaml(cls, yaml_data: str) -> StructuredDataModelClass:
+    def parse_yaml(cls, yaml_data: str) -> DataStructureModelClass:
         """
         Parses a YAML string and returns an instance of the model.
         """
@@ -202,7 +200,7 @@ class StructuredDataModelClass(BaseModel):
                 list_element = Element(name)
                 if value is not None:
                     for item in value:
-                        if isinstance(item, StructuredDataModelClass):
+                        if isinstance(item, DataStructureModelClass):
                             item_element = item.to_xml_tree()
                         else:
                             item_element = Element(item.__class__.__name__)
@@ -212,7 +210,7 @@ class StructuredDataModelClass(BaseModel):
 
             # Handle complex types
             elif isinstance(actual_type, type) and issubclass(
-                actual_type, StructuredDataModelClass
+                actual_type, DataStructureModelClass
             ):
                 sub_element = value.to_xml_tree() if value else Element(name)
                 root.append(sub_element)
@@ -267,21 +265,21 @@ class StructuredDataModelClass(BaseModel):
 
 
 @functools.cache
-def StructuredDataModel(
+def DataStructureModel(
     base_model: Type[BaseModel],
-) -> Type[StructuredDataModelClass]:
+) -> Type[DataStructureModelClass]:
     """
-    Factory function to create a structured data model class based on a Pydantic model.
-    This function returns a new class that extends `StructuredDataModelClass` and
+    Factory function to create a data structure model class based on a Pydantic model.
+    This function returns a new class that extends `DataStructureModelClass` and
     provides the `model_cls` attribute to return the provided Pydantic model.
     """
 
     if not issubclass(base_model, BaseModel):
         raise TypeError("base_model must be a subclass of pydantic.BaseModel")
 
-    if issubclass(base_model, StructuredDataModelClass):
+    if issubclass(base_model, DataStructureModelClass):
         raise TypeError(
-            "base_model must not be a subclass of StructuredDataModelClass"
+            "base_model must not be a subclass of DataStructureModelClass"
         )
 
     def transform_type(t: Any):
@@ -292,7 +290,7 @@ def StructuredDataModel(
         args = get_args(t)
 
         if isinstance(t, type) and issubclass(t, BaseModel):
-            return StructuredDataModel(t)
+            return DataStructureModel(t)
 
         if origin in (list, List):
             return List[transform_type(args[0])]
@@ -312,8 +310,8 @@ def StructuredDataModel(
         new_fields[name] = (new_field, default)
 
     new_type = create_model(
-        f"{base_model.__name__}StructuredDataModel",
-        __base__=StructuredDataModelClass,
+        f"{base_model.__name__}DataStructureModel",
+        __base__=DataStructureModelClass,
         __config__=ConfigDict(extra="forbid", validate_assignment=True),
         __module__=__name__,
         **new_fields,

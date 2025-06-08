@@ -2,7 +2,7 @@
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/circleci/E22jhLt3drt8WmRrmkWM8k/VQWy7y3rUaNYdkQU6h8WFq/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/circleci/E22jhLt3drt8WmRrmkWM8k/VQWy7y3rUaNYdkQU6h8WFq/tree/main)
 
-A library for structured data parsing and parser generation.
+A library for data structure parsing and parser generation.
 
 ## Prerequisites
 
