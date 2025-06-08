@@ -1,0 +1,20 @@
+version: 2.1
+orbs:
+  python: circleci/python@2
+jobs:
+  test-python:
+    # Install dependencies and run tests
+    docker:
+      - image: cimg/python:3.10-node
+    steps:
+      - checkout
+      - python/install-packages
+      - run:
+          name: Run tests
+          command: pytest --junitxml=junit.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
+      - store_test_results:
+          path: junit.xml
+workflows:
+  build-and-test:
+    jobs:
+      - test-python
