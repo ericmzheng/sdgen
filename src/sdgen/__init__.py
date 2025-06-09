@@ -411,8 +411,8 @@ class CppLanguageAdapter(LanguageAdapter):
             "#include <sstream>",
             "#include <nlohmann/json.hpp>",
             "#include <yaml-cpp/yaml.h>",
-            "#include <rapidxml.hpp>",
-            "#include <rapidxml_print.hpp>",
+            "#include <rapidxml/rapidxml.hpp>",
+            "#include <rapidxml/rapidxml_print.hpp>",
             "using std::string; using std::vector;",
             "",
         ]
@@ -468,14 +468,21 @@ class CppLanguageAdapter(LanguageAdapter):
             f'        auto* root = doc.allocate_node(rapidxml::node_element, "{model.__name__}");'
         )
         lines.append("        doc.append_node(root);")
-        for name in model.model_fields:
+        for name, field in model.model_fields.items():
+            annotation = field.annotation
             lines.append("        {")
             lines.append(
                 f'            auto* node = doc.allocate_node(rapidxml::node_element, "{name}");'
             )
-            lines.append(
-                f"            node->value(doc.allocate_string(std::to_string({name}).c_str()));"
-            )
+            # Use annotation to determine if this is a string field
+            if annotation is str:
+                lines.append(
+                    f"            node->value(doc.allocate_string({name}.c_str()));"
+                )
+            else:
+                lines.append(
+                    f"            node->value(doc.allocate_string(std::to_string({name}).c_str()));"
+                )
             lines.append("            root->append_node(node);")
             lines.append("        }")
         lines.append(
@@ -498,9 +505,25 @@ class CppLanguageAdapter(LanguageAdapter):
             f'        auto* root = doc.first_node("{model.__name__}");'
         )
         for name, field in model.model_fields.items():
-            lines.append(
-                f'        if (auto* node = root->first_node("{name}")) obj.{name} = std::stoi(node->value());'
-            )
+            annotation = field.annotation
+            # Use annotation to determine deserialization logic
+            if annotation is str:
+                lines.append(
+                    f'        if (auto* node = root->first_node("{name}")) obj.{name} = node->value();'
+                )
+            elif annotation in (int, i8, i16, i32, u8, u16, u32):
+                lines.append(
+                    f'        if (auto* node = root->first_node("{name}")) obj.{name} = std::stoi(node->value());'
+                )
+            elif annotation is float:
+                lines.append(
+                    f'        if (auto* node = root->first_node("{name}")) obj.{name} = std::stod(node->value());'
+                )
+            else:
+                # Fallback: assign as string (safe default for unknown types)
+                lines.append(
+                    f'        if (auto* node = root->first_node("{name}")) obj.{name} = node->value();'
+                )
         lines.append("        return obj;")
         lines.append("    }")
         lines.append("")
