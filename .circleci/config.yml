@@ -44,7 +44,7 @@ jobs:
       - run:
           name: Run C++ codegen and serialization tests with pytest
           command: |
-            pytest tests-gen/ --junitxml=junit-cpp.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
+            pytest tests-cpp-gen/ --junitxml=junit-cpp.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
       - store_test_results:
           path: junit-cpp.xml
 workflows:
