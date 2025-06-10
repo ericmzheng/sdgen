@@ -11,6 +11,7 @@
 - **Serialization/Deserialization**: Generated code includes methods for round-trip serialization to/from JSON, YAML, and XML, using best-in-class libraries (nlohmann/json, yaml-cpp, rapidxml for C++; serde, serde_json, serde_yaml, serde-xml-rs for Rust).
 - **CI-ready**: Includes pytest-based and CircleCI-compatible test infrastructure for validating codegen and serialization in both C++ and Rust.
 - **Extensible**: Add new language adapters by subclassing `LanguageAdapter`.
+- **XSD schema generation**: Generate XML Schema Definitions (XSD) for your Pydantic models, including nested models and lists, for XML interoperability and schema validation.
 
 ## Prerequisites
 
@@ -39,6 +40,33 @@ pip install -r requirements.txt
 3. **Integrate in CI:**
    - Use the provided pytest tests in `tests-cpp-gen/` and `tests-rs-gen/` to validate codegen, compilation, and round-trip serialization for C++ and Rust.
    - CircleCI config is provided for automated testing.
+
+## XSD Schema Generation
+
+`sdgen` supports generating XML Schema Definitions (XSD) for your Pydantic models, including nested models and lists. This is useful for interoperability with XML-based systems and schema validation.
+
+### Usage
+
+Call the `to_xsd()` method on your data structure model to generate an XSD string:
+
+```python
+from pydantic import BaseModel
+from sdgen import DataStructureModel
+
+class Address(BaseModel):
+    street: str
+    city: str
+
+class Person(BaseModel):
+    name: str
+    age: int
+    address: Address
+
+xsd_str = DataStructureModel(Person).to_xsd()
+print(xsd_str)
+```
+
+The generated XSD will include complex types for nested models and handle lists and optional fields appropriately.
 
 ## Project Structure
 - `src/sdgen/`: Core Python code and language adapters.

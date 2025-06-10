@@ -4,7 +4,14 @@ import functools
 import json
 import os
 from typing import Any, Dict, List, Type, Union, get_args, get_origin
-from xml.etree.ElementTree import Element, fromstring, parse, tostring
+from xml.etree.ElementTree import (
+    Element,
+    SubElement,
+    fromstring,
+    parse,
+    register_namespace,
+    tostring,
+)
 
 import yaml
 from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler, create_model
@@ -322,6 +329,96 @@ class DataStructureModelClass(BaseModel):
         with open(path, "w", encoding="utf-8") as f:
             f.write(self.to_yaml())
 
+    @classmethod
+    def to_xsd(cls) -> str:
+        """
+        Generate an XML Schema Definition (XSD) string for the model's schema,
+        including nested models and lists.
+        """
+        model = cls._model()
+        XS_NS = "http://www.w3.org/2001/XMLSchema"
+        register_namespace("xs", XS_NS)
+        schema = Element(f"{{{XS_NS}}}schema")
+        # Top-level element
+        SubElement(
+            schema,
+            f"{{{XS_NS}}}element",
+            name=model.__name__,
+            type=f"{model.__name__}Type",
+        )
+        complex_types = {}
+
+        def process_model(m):
+            if m.__name__ in complex_types:
+                return  # Already processed
+            ct = Element(f"{{{XS_NS}}}complexType", name=f"{m.__name__}Type")
+            seq = SubElement(ct, f"{{{XS_NS}}}sequence")
+            for name, field in m.model_fields.items():
+                annotation = field.annotation
+                if is_optional_type(annotation):
+                    annotation = unwrap_optional(annotation)
+                if is_list_type(annotation):
+                    item_type = unwrap_list(annotation)
+                    if isinstance(item_type, type) and issubclass(
+                        item_type, BaseModel
+                    ):
+                        process_model(item_type)
+                        SubElement(
+                            seq,
+                            f"{{{XS_NS}}}element",
+                            name=name,
+                            type=f"{item_type.__name__}Type",
+                            minOccurs="0",
+                            maxOccurs="unbounded",
+                        )
+                    else:
+                        xsd_type = _pytype_to_xsd(item_type)
+                        SubElement(
+                            seq,
+                            f"{{{XS_NS}}}element",
+                            name=name,
+                            type=xsd_type,
+                            minOccurs="0",
+                            maxOccurs="unbounded",
+                        )
+                elif isinstance(annotation, type) and issubclass(
+                    annotation, BaseModel
+                ):
+                    process_model(annotation)
+                    SubElement(
+                        seq,
+                        f"{{{XS_NS}}}element",
+                        name=name,
+                        type=f"{annotation.__name__}Type",
+                        minOccurs="0",
+                    )
+                else:
+                    xsd_type = _pytype_to_xsd(annotation)
+                    SubElement(
+                        seq,
+                        f"{{{XS_NS}}}element",
+                        name=name,
+                        type=xsd_type,
+                        minOccurs="0",
+                    )
+            complex_types[m.__name__] = ct
+
+        def _pytype_to_xsd(annotation):
+            if annotation in (int, i8, i16, i32, u8, u16, u32):
+                return "xs:int"
+            elif annotation is float:
+                return "xs:double"
+            elif annotation is str:
+                return "xs:string"
+            else:
+                return "xs:string"  # fallback
+
+        process_model(model)
+        # Add all complex types in dependency order (outermost last)
+        for ct in complex_types.values():
+            schema.append(ct)
+        return tostring(schema, encoding="unicode", xml_declaration=True)
+
 
 @functools.cache
 def DataStructureModel(
@@ -598,19 +695,33 @@ class CppLanguageAdapter(LanguageAdapter):
 class RustLanguageAdapter(LanguageAdapter):
     def generate_definition(self) -> str:
         model = self.model._model()
-        lines = [f"#[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq, Clone)]\npub struct {model.__name__} {{"]
+        lines = [
+            f"#[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq, Clone)]\npub struct {model.__name__} {{"
+        ]
         for name, field in model.model_fields.items():
             annotation = field.annotation
             type_str = self._rust_type_str(annotation)
             lines.append(f"    pub {name}: {type_str},")
         lines.append("}")
         lines.append(f"\nimpl {model.__name__} {{")
-        lines.append("    pub fn to_json(&self) -> String { serde_json::to_string_pretty(self).unwrap() }")
-        lines.append("    pub fn from_json(s: &str) -> Self { serde_json::from_str(s).unwrap() }")
-        lines.append("    pub fn to_yaml(&self) -> String { serde_yaml::to_string(self).unwrap() }")
-        lines.append("    pub fn from_yaml(s: &str) -> Self { serde_yaml::from_str(s).unwrap() }")
-        lines.append("    pub fn to_xml(&self) -> String { serde_xml_rs::to_string(self).unwrap() }")
-        lines.append("    pub fn from_xml(s: &str) -> Self { serde_xml_rs::from_str(s).unwrap() }")
+        lines.append(
+            "    pub fn to_json(&self) -> String { serde_json::to_string_pretty(self).unwrap() }"
+        )
+        lines.append(
+            "    pub fn from_json(s: &str) -> Self { serde_json::from_str(s).unwrap() }"
+        )
+        lines.append(
+            "    pub fn to_yaml(&self) -> String { serde_yaml::to_string(self).unwrap() }"
+        )
+        lines.append(
+            "    pub fn from_yaml(s: &str) -> Self { serde_yaml::from_str(s).unwrap() }"
+        )
+        lines.append(
+            "    pub fn to_xml(&self) -> String { serde_xml_rs::to_string(self).unwrap() }"
+        )
+        lines.append(
+            "    pub fn from_xml(s: &str) -> Self { serde_xml_rs::from_str(s).unwrap() }"
+        )
         lines.append("}")
         return "\n".join(lines)
 
