@@ -77,6 +77,13 @@ The generated XSD will include complex types for nested models and handle lists 
 ## Supported Languages
 - **C++**: Generates struct, JSON/YAML/XML (de)serialization, and file I/O using nlohmann/json, yaml-cpp, rapidxml.
 - **Rust**: Generates struct, JSON/YAML/XML (de)serialization, and file I/O using serde, serde_json, serde_yaml, serde-xml-rs.
+- **Java**: Generates struct, JSON/YAML/XML (de)serialization, and file I/O using Jackson.
+
+## Future Languages
+- **Go**: Planned support for Go code generation with encoding/json and encoding/xml.
+- **C#**: Planned support for C# code generation with Newtonsoft.Json for JSON/YAML and System.Xml.Serialization for XML.
+- **Swift**: Planned support for Swift code generation with Codable for JSON/YAML and XML.
+- **Ruby**: Planned support for Ruby code generation with JSON and Nokogiri for XML.
 
 ## License
 MIT

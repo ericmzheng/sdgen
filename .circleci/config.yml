@@ -75,9 +75,38 @@ jobs:
             pytest tests-rs-gen/ --junitxml=junit-rs.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
       - store_test_results:
           path: junit-rs.xml
+  test-java-gen:
+    docker:
+      - image: cimg/openjdk:21.0-node
+    steps:
+      - checkout
+      - run:
+          name: Install Python and pip
+          command: |
+            sudo apt-get update && sudo apt-get install -y python3 python3-pip
+      - run:
+          name: Install dependencies
+          command: |
+            pip3 install -r requirements.txt
+      - run:
+          name: Install sdgen
+          command: |
+            pip3 install .
+      - run:
+          name: Install Maven
+          command: sudo apt-get update && sudo apt-get install -y maven || true
+      - run:
+          name: Download Java dependencies with Maven
+          command: mvn -f tests-java-gen/pom.xml dependency:copy-dependencies
+      - run:
+          name: Run Java codegen tests
+          command: pytest tests-java-gen/ --junitxml=junit-java.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
+      - store_test_results:
+          path: junit-java.xml
 workflows:
   build-and-test:
     jobs:
       - test-python
       - test-cpp-gen
       - test-rs-gen
+      - test-java-gen
