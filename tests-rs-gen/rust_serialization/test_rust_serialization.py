@@ -1,6 +1,7 @@
 import sys
 import subprocess
-from sdgen import BaseModel, DataStructureModel, RustLanguageAdapter, i32
+from pydantic import BaseModel
+from sdgen import DataStructureModel, RustLanguageAdapter, i32
 import os
 import pytest
 

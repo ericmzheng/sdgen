@@ -1,6 +1,7 @@
 import sys
 import subprocess
-from sdgen import BaseModel, DataStructureModel, CppLanguageAdapter, i32
+from pydantic import BaseModel
+from sdgen import DataStructureModel, CppLanguageAdapter, i32
 import os
 import pytest
 
