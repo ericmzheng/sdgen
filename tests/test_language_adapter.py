@@ -1,9 +1,9 @@
 from typing import List, Optional
 
 import pytest
+from pydantic import BaseModel
 
 from sdgen import (
-    BaseModel,
     CppLanguageAdapter,
     DataStructureModel,
     DataStructureModelClass,
