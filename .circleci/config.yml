@@ -47,8 +47,37 @@ jobs:
             pytest tests-cpp-gen/ --junitxml=junit-cpp.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
       - store_test_results:
           path: junit-cpp.xml
+  test-rs-gen:
+    docker:
+      - image: rust:1.77
+    steps:
+      - checkout
+      - run:
+          name: Install Python and pip
+          command: |
+            apt-get update && apt-get install -y python3 python3-pip
+      - run:
+          name: Install dependencies
+          command: |
+            pip3 install -r requirements.txt --break-system-packages
+      - run:
+          name: Install sdgen
+          command: |
+            pip3 install . --break-system-packages
+      - run:
+          name: Install Rust dependencies
+          command: |
+            rustup component add rustfmt
+            cargo install cargo-edit || true
+      - run:
+          name: Run Rust codegen and serialization tests with pytest
+          command: |
+            pytest tests-rs-gen/ --junitxml=junit-rs.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
+      - store_test_results:
+          path: junit-rs.xml
 workflows:
   build-and-test:
     jobs:
       - test-python
       - test-cpp-gen
+      - test-rs-gen
