@@ -4,6 +4,8 @@
 
 `sdgen` is a Python package for generating strongly-typed data structure definitions and robust serialization/deserialization code in multiple languages, including C++ and Rust. It is designed for schema-driven code generation, round-trip serialization, and easy integration into CI pipelines.
 
+This project is a vibe coding experiment.
+
 ## Features
 - **Python installable**: Install via pip and use as a library or CLI.
 - **Schema-driven**: Define your data structures as Python (Pydantic) models.
