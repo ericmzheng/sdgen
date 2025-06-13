@@ -1,0 +1,14 @@
+{
+  "name": "Alice",
+  "age": 30,
+  "id": 42
+}
+<?xml version="1.0" encoding="utf-16"?>
+<Person xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <name>Alice</name>
+  <age>30</age>
+  <id>42</id>
+</Person>
+name: Alice
+age: 30
+id: 42

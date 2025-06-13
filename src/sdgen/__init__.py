@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .cpp_adapter import CppLanguageAdapter
+from .cs_adapter import CsLanguageAdapter
 from .go_adapter import GoLanguageAdapter
 from .java_adapter import JavaLanguageAdapter
 from .language_adapter import LanguageAdapter
@@ -24,6 +25,7 @@ __all__ = [
     "RustLanguageAdapter",
     "JavaLanguageAdapter",
     "GoLanguageAdapter",
+    "CsLanguageAdapter",
     "i8",
     "i16",
     "i32",

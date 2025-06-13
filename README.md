@@ -74,17 +74,19 @@ The generated XSD will include complex types for nested models and handle lists 
 - `src/sdgen/`: Core Python code and language adapters.
 - `tests/`: Python unit tests for core logic.
 - `tests-cpp-gen/`: Pytest-based C++ codegen and serialization tests.
+- `tests-cs-gen/`: Pytest-based C# codegen and serialization tests.
+- `tests-java-gen/`: Pytest-based Java codegen and serialization tests.
 - `tests-go-gen/`: Pytest-based Go codegen and serialization tests.
 - `tests-rs-gen/`: Pytest-based Rust codegen and serialization tests.
 
 ## Supported Languages
 - **C++**: Generates struct, JSON/YAML/XML (de)serialization, and file I/O using nlohmann/json, yaml-cpp, rapidxml.
+- **C#**: Generates class, JSON/XML (de)serialization, and file I/O using System.Text.Json and System.Xml.Serialization.
+- **Java**: Generates struct, JSON/YAML/XML (de)serialization, and file I/O using Jackson.
 - **Go**: Generates struct, JSON/XML (de)serialization, and file I/O using encoding/json and encoding/xml.
 - **Rust**: Generates struct, JSON/YAML/XML (de)serialization, and file I/O using serde, serde_json, serde_yaml, serde-xml-rs.
-- **Java**: Generates struct, JSON/YAML/XML (de)serialization, and file I/O using Jackson.
 
 ## Future Languages
-- **C#**: Planned support for C# code generation with Newtonsoft.Json for JSON/YAML and System.Xml.Serialization for XML.
 - **Swift**: Planned support for Swift code generation with Codable for JSON/YAML and XML.
 - **Ruby**: Planned support for Ruby code generation with JSON and Nokogiri for XML.
 
