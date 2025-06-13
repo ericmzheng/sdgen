@@ -22,9 +22,7 @@ class CsLanguageAdapter(LanguageAdapter):
         for name, field in model.model_fields.items():
             annotation = field.annotation
             type_str = self._cs_type_str(annotation)
-            lines.append(
-                f"    public {type_str} {name} {{ get; set; }}"
-            )
+            lines.append(f"    public {type_str} {name} {{ get; set; }}")
         lines.append("")
         # JSON serialization
         lines.append(

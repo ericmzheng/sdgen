@@ -145,6 +145,36 @@ jobs:
           command: pytest tests-cs-gen/ --junitxml=junit-cs.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
       - store_test_results:
           path: junit-cs.xml
+  test-swift-gen:
+    macos:
+      xcode: 15.3.0
+    steps:
+      - checkout
+      - run:
+          name: Install Python and pip
+          command: |
+            brew install python@3.10 || true
+            python3 -m pip install --upgrade pip
+      - run:
+          name: Install dependencies
+          command: |
+            pip3 install -r requirements.txt
+      - run:
+          name: Install sdgen
+          command: |
+            pip3 install .
+      - run:
+          name: Install SwiftPM dependencies for XMLCoder and Yams
+          command: |
+            cd tests-swift-gen || exit 0
+            if [ -f Package.swift ]; then
+              swift package resolve
+            fi
+      - run:
+          name: Run Swift adapter tests
+          command: pytest tests-swift-gen/ --junitxml=junit-swift.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
+      - store_test_results:
+          path: junit-swift.xml
 workflows:
   build-and-test:
     jobs:
@@ -154,3 +184,4 @@ workflows:
       - test-java-gen
       - test-go-gen
       - test-cs-gen
+      - test-swift-gen

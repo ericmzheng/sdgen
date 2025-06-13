@@ -16,6 +16,7 @@ from .model import (
     u32,
 )
 from .rust_adapter import RustLanguageAdapter
+from .swift_adapter import SwiftLanguageAdapter
 
 __all__ = [
     "DataStructureModel",
@@ -26,6 +27,7 @@ __all__ = [
     "JavaLanguageAdapter",
     "GoLanguageAdapter",
     "CsLanguageAdapter",
+    "SwiftLanguageAdapter",
     "i8",
     "i16",
     "i32",
