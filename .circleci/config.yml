@@ -101,6 +101,28 @@ jobs:
           command: pytest tests-java-gen/ --junitxml=junit-java.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
       - store_test_results:
           path: junit-java.xml
+  test-go-gen:
+    docker:
+      - image: cimg/go:1.22
+    steps:
+      - checkout
+      - run:
+          name: Install Python and pip
+          command: |
+            sudo apt-get update && sudo apt-get install -y python3 python3-pip
+      - run:
+          name: Install dependencies
+          command: |
+            pip3 install -r requirements.txt
+      - run:
+          name: Install sdgen
+          command: |
+            pip3 install .
+      - run:
+          name: Run Go adapter tests
+          command: pytest tests-go-gen/ --junitxml=junit-go.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
+      - store_test_results:
+          path: junit-go.xml
 workflows:
   build-and-test:
     jobs:
@@ -108,3 +130,4 @@ workflows:
       - test-cpp-gen
       - test-rs-gen
       - test-java-gen
+      - test-go-gen
